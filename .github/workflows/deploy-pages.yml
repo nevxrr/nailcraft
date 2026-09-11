@@ -9,6 +9,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: write
 
 concurrency:
   group: pages
@@ -24,6 +25,17 @@ jobs:
         with:
           node-version: 22
           cache: npm
+
+      # Launch-from-branch sets build_type=legacy and Jekyll publishes the Vite
+      # source (empty #root + /src/main.tsx). Papa uses workflow. Switch if we can.
+      - name: Use GitHub Actions as Pages source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        continue-on-error: true
+        run: |
+          gh api --method PUT "repos/${GITHUB_REPOSITORY}/pages" \
+            -H "Accept: application/vnd.github+json" \
+            -f build_type=workflow
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -46,5 +58,30 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # pages-build-deployment overwrote the Vite artifact 6s after a successful
+      # Actions deploy. Cancel it and publish last so the live site is dist/.
+      - name: Stop Jekyll source deploy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          gh run list --repo "${GITHUB_REPOSITORY}" \
+            --workflow pages-build-deployment \
+            --commit "${GITHUB_SHA}" \
+            --json databaseId,status \
+            --jq '.[] | select(.status=="in_progress" or .status=="queued" or .status=="waiting") | .databaseId' \
+          | while read -r id; do
+              [ -n "${id}" ] || continue
+              gh run cancel "${id}" --repo "${GITHUB_REPOSITORY}" || true
+            done
+          if gh run list --repo "${GITHUB_REPOSITORY}" \
+            --workflow pages-build-deployment \
+            --commit "${GITHUB_SHA}" \
+            --json databaseId --jq 'length' | grep -vq '^0$'; then
+            echo "Waiting so the Vite artifact is the last Pages deploy"
+            sleep 30
+          fi
+
       - id: deployment
         uses: actions/deploy-pages@v4
