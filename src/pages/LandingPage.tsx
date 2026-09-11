@@ -108,7 +108,9 @@ export function LandingPage() {
           <div className="hero-layout">
             <div className="hero-copy">
               <h1 className="hero-title">
-                Сколы на 3-й день —
+                Сколы
+                <br />
+                на третий день —
                 <span className="hero-title-break">это не норма.</span>
               </h1>
               <p className="hero-lead">

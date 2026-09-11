@@ -60,7 +60,7 @@ export function LandingNav() {
           )}
           {enrolled && (
             <Link to="/course" onClick={() => setOpen(false)}>
-              Курс
+              Мой курс
             </Link>
           )}
           <a

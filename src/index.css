@@ -37,7 +37,8 @@ body {
   font-family: var(--font);
   color: var(--ink);
   background: #fff;
-  line-height: 1.35;
+  line-height: 1.45;
+  word-spacing: 0.06em;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -360,8 +361,9 @@ ol {
 .hero-title {
   font-size: clamp(2.15rem, 6.4vw, 5.4rem);
   font-weight: 400;
-  line-height: 0.98;
-  letter-spacing: -0.035em;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  word-spacing: 0.04em;
 }
 
 .hero-title-break {
@@ -435,9 +437,9 @@ ol {
 }
 
 .cta-ghost.dark {
-  border-color: rgba(255, 255, 255, 0.28);
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.82);
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
 }
 
 .cta-ghost:hover {
@@ -1182,7 +1184,6 @@ ol {
   .portrait-block {
     justify-self: center;
     width: min(100%, 340px);
-    order: -1;
   }
 
   .hero-layout {
