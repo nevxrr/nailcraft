@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { NAV, TELEGRAM_URL } from '../data/content'
-import { useStore } from '../store/StoreContext'
+import { displayName, useStore } from '../store/StoreContext'
 import telegramIcon from '../assets/figma/telegram.svg'
 
 export function LandingNav() {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
-  const { enrolled } = useStore()
+  const { user, enrolled } = useStore()
   const onHome = useLocation().pathname === '/'
 
   useEffect(() => {
@@ -58,10 +58,26 @@ export function LandingNav() {
               </Link>
             ),
           )}
-          {enrolled && (
-            <Link to="/course" onClick={() => setOpen(false)}>
-              Мой курс
-            </Link>
+          {user ? (
+            <>
+              <NavLink to="/cabinet" onClick={() => setOpen(false)}>
+                Кабинет
+              </NavLink>
+              {enrolled && (
+                <NavLink to="/cabinet/course" onClick={() => setOpen(false)}>
+                  Мой курс
+                </NavLink>
+              )}
+              {user.role === 'teacher' && (
+                <NavLink to="/crm" onClick={() => setOpen(false)}>
+                  CRM
+                </NavLink>
+              )}
+            </>
+          ) : (
+            <NavLink to="/login" onClick={() => setOpen(false)}>
+              Войти
+            </NavLink>
           )}
           <a
             href={TELEGRAM_URL}
@@ -87,6 +103,16 @@ export function LandingHeader() {
       </div>
       <LandingNav />
     </>
+  )
+}
+
+export function BrandBar() {
+  return (
+    <div className="shell landing-brand">
+      <Link to="/" className="logo">
+        NailCraft
+      </Link>
+    </div>
   )
 }
 
@@ -121,4 +147,18 @@ export function TelegramIconLink({ className = '' }: { className?: string }) {
       <img src={telegramIcon} alt="" />
     </a>
   )
+}
+
+export function Avatar({
+  photoUrl,
+  name,
+}: {
+  photoUrl?: string
+  name?: string
+}) {
+  const label = name || displayName(null)
+  if (photoUrl) {
+    return <img className="avatar-img" src={photoUrl} alt="" />
+  }
+  return <div className="avatar" aria-hidden title={label} />
 }
