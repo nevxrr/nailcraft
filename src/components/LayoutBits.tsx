@@ -1,11 +1,14 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { NAV, TELEGRAM_URL } from '../data/content'
+import { useStore } from '../store/StoreContext'
 import telegramIcon from '../assets/figma/telegram.svg'
-import vkIcon from '../assets/figma/vk.svg'
 
 export function LandingNav() {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
+  const { enrolled } = useStore()
+  const onHome = useLocation().pathname === '/'
 
   useEffect(() => {
     if (!open) return
@@ -40,18 +43,34 @@ export function LandingNav() {
       </button>
       {open && (
         <nav id="landing-menu" className="nav-glass" aria-label="Разделы">
-          <a href="#courses" onClick={() => setOpen(false)}>
-            Курсы
+          {NAV.map((item) =>
+            onHome ? (
+              <a key={item.href} href={item.href} onClick={() => setOpen(false)}>
+                {item.label}
+              </a>
+            ) : (
+              <Link
+                key={item.href}
+                to={`/${item.href}`}
+                onClick={() => setOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ),
+          )}
+          {enrolled && (
+            <Link to="/course" onClick={() => setOpen(false)}>
+              Курс
+            </Link>
+          )}
+          <a
+            href={TELEGRAM_URL}
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => setOpen(false)}
+          >
+            Telegram
           </a>
-          <a href="#reviews" onClick={() => setOpen(false)}>
-            Отзывы
-          </a>
-          <a href="#contacts" onClick={() => setOpen(false)}>
-            Контакты
-          </a>
-          <NavLink to="/cabinet" onClick={() => setOpen(false)}>
-            Кабинет
-          </NavLink>
         </nav>
       )}
     </div>
@@ -71,42 +90,35 @@ export function LandingHeader() {
   )
 }
 
-export function PageChrome({
-  children,
-  showBack = true,
+export function TelegramButton({
+  children = 'Написать в Telegram',
+  className = 'cta-figma',
 }: {
-  children: ReactNode
-  showBack?: boolean
+  children?: string
+  className?: string
 }) {
   return (
-    <div className="page">
-      <div className="shell landing-brand">
-        <Link to="/" className="logo">
-          NailCraft
-        </Link>
-      </div>
-      <LandingNav />
-      <div className="shell shell-inner">
-        {children}
-        {showBack && (
-          <Link to="/" className="back-home">
-            Вернуться на главную
-          </Link>
-        )}
-      </div>
-    </div>
+    <a
+      href={TELEGRAM_URL}
+      target="_blank"
+      rel="noreferrer"
+      className={className}
+    >
+      {children}
+    </a>
   )
 }
 
-export function SocialLinks() {
+export function TelegramIconLink({ className = '' }: { className?: string }) {
   return (
-    <div className="social-figma">
-      <a href="https://t.me/" target="_blank" rel="noreferrer" aria-label="Telegram">
-        <img src={telegramIcon} alt="" />
-      </a>
-      <a href="https://vk.com/" target="_blank" rel="noreferrer" aria-label="VK">
-        <img src={vkIcon} alt="" />
-      </a>
-    </div>
+    <a
+      href={TELEGRAM_URL}
+      target="_blank"
+      rel="noreferrer"
+      className={`social-figma-link ${className}`.trim()}
+      aria-label="Telegram"
+    >
+      <img src={telegramIcon} alt="" />
+    </a>
   )
 }

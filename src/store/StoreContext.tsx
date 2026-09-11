@@ -8,41 +8,19 @@ import {
   type ReactNode,
 } from 'react'
 
-const STORAGE_KEY = 'nailcraft-v1'
-
-interface Booking {
-  slotId: string
-  name: string
-  phone: string
-  createdAt: string
-}
+const STORAGE_KEY = 'nailcraft-v2'
 
 interface AppState {
-  userName: string
-  enrolledCourseIds: string[]
-  bookings: Booking[]
-  lessonProgress: Record<string, boolean>
+  enrolled: boolean
 }
 
 interface StoreApi {
-  state: AppState
-  isLoggedIn: boolean
-  hasAccess: boolean
-  login: (name: string) => void
-  logout: () => void
-  enroll: (courseId: string) => void
-  isEnrolled: (courseId: string) => boolean
-  bookSlot: (slotId: string, name: string, phone: string) => void
-  hasBooking: (slotId: string) => boolean
-  toggleLesson: (lessonId: string) => void
+  enrolled: boolean
+  enroll: () => void
+  reset: () => void
 }
 
-const defaultState: AppState = {
-  userName: '',
-  enrolledCourseIds: [],
-  bookings: [],
-  lessonProgress: {},
-}
+const defaultState: AppState = { enrolled: false }
 
 function load(): AppState {
   try {
@@ -63,80 +41,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   }, [state])
 
-  const login = useCallback((name: string) => {
-    setState((s) => ({ ...s, userName: name.trim() || 'Ученица' }))
+  const enroll = useCallback(() => {
+    setState({ enrolled: true })
   }, [])
 
-  const logout = useCallback(() => {
+  const reset = useCallback(() => {
     setState(defaultState)
-  }, [])
-
-  const enroll = useCallback((courseId: string) => {
-    setState((s) => ({
-      ...s,
-      userName: s.userName || 'Ученица',
-      enrolledCourseIds: s.enrolledCourseIds.includes(courseId)
-        ? s.enrolledCourseIds
-        : [...s.enrolledCourseIds, courseId],
-    }))
-  }, [])
-
-  const isEnrolled = useCallback(
-    (courseId: string) => state.enrolledCourseIds.includes(courseId),
-    [state.enrolledCourseIds],
-  )
-
-  const bookSlot = useCallback((slotId: string, name: string, phone: string) => {
-    setState((s) => {
-      if (s.bookings.some((b) => b.slotId === slotId)) return s
-      return {
-        ...s,
-        bookings: [
-          ...s.bookings,
-          { slotId, name, phone, createdAt: new Date().toISOString() },
-        ],
-      }
-    })
-  }, [])
-
-  const hasBooking = useCallback(
-    (slotId: string) => state.bookings.some((b) => b.slotId === slotId),
-    [state.bookings],
-  )
-
-  const toggleLesson = useCallback((lessonId: string) => {
-    setState((s) => ({
-      ...s,
-      lessonProgress: {
-        ...s.lessonProgress,
-        [lessonId]: !s.lessonProgress[lessonId],
-      },
-    }))
   }, [])
 
   const api = useMemo<StoreApi>(
     () => ({
-      state,
-      isLoggedIn: Boolean(state.userName),
-      hasAccess: state.enrolledCourseIds.length > 0,
-      login,
-      logout,
+      enrolled: state.enrolled,
       enroll,
-      isEnrolled,
-      bookSlot,
-      hasBooking,
-      toggleLesson,
+      reset,
     }),
-    [
-      state,
-      login,
-      logout,
-      enroll,
-      isEnrolled,
-      bookSlot,
-      hasBooking,
-      toggleLesson,
-    ],
+    [state.enrolled, enroll, reset],
   )
 
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>
