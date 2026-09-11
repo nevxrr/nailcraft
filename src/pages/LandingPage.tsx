@@ -1,54 +1,127 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  courses,
-  formatPrice,
-  reviews,
-  MASTER,
-} from '../data/content'
-import { useStore } from '../store/StoreContext'
-import { LandingHeader, SocialLinks } from '../components/LayoutBits'
 import handImg from '../assets/figma/hand.png'
 import masterImg from '../assets/figma/master.png'
+import {
+  LandingHeader,
+  TelegramButton,
+  TelegramIconLink,
+} from '../components/LayoutBits'
+import {
+  COURSE,
+  DAY_PLAN,
+  FOR_WHOM,
+  MASTER,
+  OFFER_POINTS,
+  PAIN,
+  RPM_ROWS,
+  SYSTEM,
+  TELEGRAM_URL,
+  TICKER,
+  formatPrice,
+} from '../data/content'
+import { Reveal } from '../components/Reveal'
+import { usePrefersReducedMotion, useScrollProgress } from '../hooks/useMotion'
+import { useStore } from '../store/StoreContext'
+
+function Ticker() {
+  const line = [...TICKER, ...TICKER]
+  return (
+    <div className="ticker" aria-hidden>
+      <div className="ticker-track">
+        {line.map((item, i) => (
+          <span key={`${item}-${i}`}>
+            {item}
+            <i />
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function CursorGlow() {
+  const reduced = usePrefersReducedMotion()
+  const [pos, setPos] = useState({ x: 0, y: 0, on: false })
+
+  useEffect(() => {
+    if (reduced) return
+    const fine = window.matchMedia('(hover: hover) and (pointer: fine)')
+    if (!fine.matches) return
+    const move = (e: PointerEvent) => {
+      setPos({ x: e.clientX, y: e.clientY, on: true })
+    }
+    const leave = () => setPos((p) => ({ ...p, on: false }))
+    window.addEventListener('pointermove', move)
+    document.documentElement.addEventListener('mouseleave', leave)
+    return () => {
+      window.removeEventListener('pointermove', move)
+      document.documentElement.removeEventListener('mouseleave', leave)
+    }
+  }, [reduced])
+
+  if (!pos.on) return null
+  return (
+    <div
+      className="cursor-glow"
+      style={{ '--cx': `${pos.x}px`, '--cy': `${pos.y}px` } as CSSProperties}
+      aria-hidden
+    />
+  )
+}
 
 export function LandingPage() {
   const navigate = useNavigate()
-  const { enroll, isEnrolled, state, login } = useStore()
-  const [sent, setSent] = useState(false)
+  const { enroll, enrolled } = useStore()
+  const progress = useScrollProgress()
 
-  function buy(courseId: string) {
-    if (!state.userName) login('Ученица')
-    enroll(courseId)
-    navigate('/cabinet')
-  }
+  useEffect(() => {
+    const id = window.location.hash.replace('#', '')
+    if (!id) return
+    const t = window.setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+    }, 60)
+    return () => window.clearTimeout(t)
+  }, [])
 
-  function onContact(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setSent(true)
+  function openCourse() {
+    enroll()
+    navigate('/course')
   }
 
   return (
     <div className="page landing" id="top">
+      <div className="scroll-bar" style={{ transform: `scaleX(${progress})` }} />
+      <div className="atmosphere" aria-hidden>
+        <span className="orb orb-a" />
+        <span className="orb orb-b" />
+        <span className="orb orb-c" />
+      </div>
+      <CursorGlow />
       <LandingHeader />
 
       <main>
         <section className="shell hero-section">
+          <p className="hero-kicker">
+            <span>01</span> Школа · {MASTER.years} лет практики
+          </p>
           <div className="hero-layout">
             <div className="hero-copy">
               <h1 className="hero-title">
-                Хотите зарабатывать от{' '}
-                <span className="money">80.000 ₽</span> в день и работать на
-                себя?
+                Сколы
+                <br />
+                на третий день —
+                <span className="hero-title-break">это не норма.</span>
               </h1>
               <p className="hero-lead">
-                Мы превратим ваше увлечение в востребованную профессию с нуля.
-                Вы получите не просто диплом, а готовый набор навыков для
-                старта карьеры уже на следующей неделе
+                Аппаратный маникюр без режущего. Гель как архитектура.
+                Носка до 5 недель.
               </p>
               <div className="cta-wrap">
-                <a href="#courses" className="cta-figma">
-                  Посмотреть курсы
-                </a>
+                <TelegramButton>Написать в Telegram</TelegramButton>
+                <button type="button" className="cta-ghost" onClick={openCourse}>
+                  {enrolled ? 'Открыть курс' : 'Тест · открыть курс без оплаты'}
+                </button>
                 <div className="hero-hand" aria-hidden>
                   <img src={handImg} alt="" />
                 </div>
@@ -63,176 +136,173 @@ export function LandingPage() {
                 <strong>{MASTER.name}</strong>
                 <span>{MASTER.title}</span>
               </div>
-              <SocialLinks />
+              <div className="hero-facts">
+                <span>без ножниц</span>
+                <span>2 места</span>
+                <span>{formatPrice(COURSE.price)}</span>
+              </div>
             </div>
           </div>
         </section>
 
-        <section className="shell section" id="courses">
-          <div className="section-head">
-            <h2>Курсы</h2>
-            <p>
-              После оплаты откроется личный кабинет с уроками и записью на
-              офлайн.
-            </p>
-          </div>
-          <div className="cards-8">
-            {courses.map((course) => {
-              const owned = isEnrolled(course.id)
-              return (
-                <article key={course.id} className="course-tile">
-                  <div className="meta-row">
-                    <span className="chip">{course.level}</span>
-                    <span className="chip">
-                      {course.format === 'online'
-                        ? 'Онлайн'
-                        : course.format === 'offline'
-                          ? 'Офлайн'
-                          : 'Гибрид'}
-                    </span>
-                    <span className="chip">{course.duration}</span>
-                  </div>
-                  <h3>{course.title}</h3>
-                  <p>{course.description}</p>
-                  <div className="tile-foot">
-                    <span className="price">{formatPrice(course.price)}</span>
-                    {owned ? (
-                      <button
-                        type="button"
-                        className="btn btn-aqua"
-                        onClick={() => navigate('/cabinet')}
-                      >
-                        Открыть
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        className="btn btn-dark"
-                        onClick={() => buy(course.id)}
-                      >
-                        Оплатить
-                      </button>
-                    )}
-                  </div>
-                </article>
-              )
-            })}
-          </div>
-        </section>
+        <Ticker />
 
-        <section className="shell section" id="how">
-          <div className="section-head">
-            <h2>Как устроена платформа</h2>
-            <p>Лендинг → оплата курса → кабинет с уроками и офлайн-записью.</p>
+        <section className="shell chapter" id="pain">
+          <div className="chapter-index">
+            <span className="chapter-num">02</span>
+            <h2>Боль</h2>
+            <p>Три причины, почему покрытие не доживает до коррекции.</p>
           </div>
-          <div className="how-grid">
-            <div className="how-step glass">
-              <div className="num">01</div>
-              <h3>Выбор курса</h3>
-              <p>Смотрите программы и формат без регистрации.</p>
-            </div>
-            <div className="how-step glass">
-              <div className="num">02</div>
-              <h3>Оплата</h3>
-              <p>После оплаты открывается личный кабинет.</p>
-            </div>
-            <div className="how-step glass">
-              <div className="num">03</div>
-              <h3>Учёба и практика</h3>
-              <p>Онлайн-уроки и запись на живые занятия.</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="shell section" id="reviews">
-          <div className="section-head">
-            <h2>Отзывы</h2>
-            <p>Коротко о том, как проходит обучение в NailCraft.</p>
-          </div>
-          <div className="reviews-grid">
-            {reviews.map((r) => (
-              <article key={r.id} className="review-card glass-strong">
-                <div className="stars">{'★'.repeat(r.rating)}</div>
-                <p>{r.text}</p>
-                <footer>
-                  <strong>{r.name}</strong>
-                  <span>{r.course}</span>
-                </footer>
-              </article>
+          <div className="pain-stack">
+            {PAIN.map((item, i) => (
+              <Reveal key={item.num} className="pain-card" delay={i * 80}>
+                <span className="num">{item.num}</span>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </Reveal>
             ))}
           </div>
         </section>
 
-        <section className="shell section" id="contacts">
-          <div className="section-head">
-            <h2>Контакты</h2>
+        <section className="shell chapter" id="system">
+          <div className="chapter-index">
+            <span className="chapter-num">03</span>
+            <h2>Система</h2>
+            <p>Не «на глаз». Фреза, обороты, архитектура — и носка до 5 недель.</p>
           </div>
-          <div className="contacts-block">
-            <div className="contact-card glass">
-              <p className="contacts-legal">
-                {MASTER.fullLegal}
-                <br />
-                ИНН: {MASTER.inn}
-              </p>
-              <div className="contacts-lines">
-                <p>Телефон: {MASTER.phone}</p>
-                <p>Адрес: {MASTER.address}</p>
-              </div>
-              <div className="legal-links">
-                <a href="#offer">Оферта</a>
-                <a href="#privacy">Политика конфиденциальности</a>
-              </div>
-              <SocialLinks />
-            </div>
+          <div className="system-grid">
+            {SYSTEM.map((item, i) => (
+              <Reveal key={item.num} className="system-card" delay={i * 70}>
+                <span className="num">{item.num}</span>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </Reveal>
+            ))}
+          </div>
+        </section>
 
-            <form className="contact-form glass-strong" onSubmit={onContact}>
-              <h3>Оставить заявку</h3>
-              <p className="muted">Подскажем, с какого курса лучше начать.</p>
-              <div className="form-grid">
-                <label className="field">
-                  <span>Имя</span>
-                  <input name="name" required placeholder="Алина" />
-                </label>
-                <label className="field">
-                  <span>Телефон или Telegram</span>
-                  <input
-                    name="contact"
-                    required
-                    placeholder="+7 или @username"
-                  />
-                </label>
-                <label className="field">
-                  <span>Интересует</span>
-                  <select name="interest" defaultValue="start">
-                    {courses.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.title}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <button type="submit" className="btn btn-pink">
-                  Отправить
-                </button>
-                {sent && (
-                  <div className="toast" role="status">
-                    Заявка принята — скоро свяжемся.
-                  </div>
-                )}
+        <section className="shell offer-section" id="offer">
+          <Reveal className="offer-stage">
+            <p className="eyebrow">
+              <span>04</span> Курс
+            </p>
+            <h2 className="offer-title">{COURSE.title}</h2>
+            <p className="offer-lead">
+              Один день. Теория, затем две модели. Мини-группа из двух —
+              или индивидуально.
+            </p>
+            <div className="offer-price">
+              <strong>{formatPrice(COURSE.price)}</strong>
+              <span>стажировка {formatPrice(COURSE.internship)}</span>
+            </div>
+            <ul className="offer-points">
+              {OFFER_POINTS.map((item) => (
+                <li key={item.label}>
+                  <span>{item.label}</span>
+                  <strong>{item.value}</strong>
+                </li>
+              ))}
+            </ul>
+            <div className="offer-actions">
+              <TelegramButton>Забронировать место в Telegram</TelegramButton>
+              <button type="button" className="cta-ghost dark" onClick={openCourse}>
+                {enrolled ? 'Продолжить курс' : 'Тест · войти в курс без оплаты'}
+              </button>
+            </div>
+          </Reveal>
+        </section>
+
+        <section className="shell chapter" id="day">
+          <div className="chapter-index">
+            <span className="chapter-num">05</span>
+            <h2>День</h2>
+            <p>Быстрый каркас: сначала таблица, потом руки. Без воды.</p>
+          </div>
+          <div className="day-list">
+            {DAY_PLAN.map((item, i) => (
+              <Reveal key={item.time} className="day-row" delay={i * 80}>
+                <span className="day-mark">0{i + 1}</span>
+                <div>
+                  <p className="day-time">{item.time}</p>
+                  <h3>{item.title}</h3>
+                  <p>{item.text}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+          <div className="whom-grid">
+            {FOR_WHOM.map((item, i) => (
+              <Reveal key={item.title} className="whom-card glass" delay={i * 90}>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+
+        <section className="shell gift-section" id="gift">
+          <Reveal className="gift-card">
+            <div className="gift-copy">
+              <p className="eyebrow">
+                <span>06</span> Подарок
+              </p>
+              <h2>Шпаргалка «фрезы и обороты»</h2>
+              <p>
+                Таблица, по которой учат аппарат: фреза, зона, обороты, задача.
+                PDF ещё собирается — каркас уже здесь. Полную версию и разборы
+                сложных ногтей пришлю в Telegram.
+              </p>
+              <TelegramButton>Забрать шпаргалку в Telegram</TelegramButton>
+            </div>
+            <div className="rpm-wrap" role="table" aria-label="Фрезы и обороты">
+              <div className="rpm-head" role="row">
+                <span>Фреза</span>
+                <span>Зона</span>
+                <span>Обороты</span>
+                <span>Задача</span>
               </div>
-            </form>
-          </div>
-          <div className="map-box" aria-label="Карта">
-            КАРТА
-          </div>
+              {RPM_ROWS.map((row) => (
+                <div key={row.bit} className="rpm-row" role="row">
+                  <strong>{row.bit}</strong>
+                  <span>{row.zone}</span>
+                  <span>{row.rpm}</span>
+                  <span>{row.job}</span>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+        </section>
+
+        <section className="shell about-section" id="about">
+          <Reveal className="about-grid">
+            <div>
+              <p className="eyebrow">
+                <span>07</span> Преподаватель
+              </p>
+              <h2>{MASTER.name}</h2>
+              <p className="about-lead">
+                {MASTER.years} лет в аппаратном маникюре. Учит без режущего
+                инструмента — с нуля и тех, кто уже работает.
+              </p>
+              <p className="muted">
+                Уроки — таблицы и чек-листы. Лайфхаки. Разбор сложных пластин.
+                После дня — чат, не брошенные в мессенджере.
+              </p>
+            </div>
+            <aside className="about-aside glass-strong">
+              <p>{MASTER.legal}</p>
+              <p>Контакт и вход — только Telegram.</p>
+              <TelegramIconLink />
+            </aside>
+          </Reveal>
         </section>
       </main>
 
       <footer className="shell site-footer">
         <span>© {new Date().getFullYear()} NailCraft</span>
-        <span>
-          {MASTER.name} · {MASTER.title}
-        </span>
+        <a href={TELEGRAM_URL} target="_blank" rel="noreferrer">
+          Telegram
+        </a>
       </footer>
     </div>
   )
