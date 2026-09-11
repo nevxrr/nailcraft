@@ -7,10 +7,12 @@ import {
   formatPrice,
 } from '../data/content'
 import { useStore } from '../store/StoreContext'
-import { LandingNav, TelegramButton } from '../components/LayoutBits'
+import { BrandBar, LandingNav, TelegramButton } from '../components/LayoutBits'
 
 export function CoursePage() {
-  const { enrolled, reset } = useStore()
+  const { ready, user, enrolled, logout } = useStore()
+  if (!ready) return null
+  if (!user) return <Navigate to="/login?next=/cabinet/course&pay=1" replace />
   if (!enrolled) return <Navigate to="/#offer" replace />
 
   return (
@@ -19,11 +21,7 @@ export function CoursePage() {
         <span className="orb orb-b" />
         <span className="orb orb-c" />
       </div>
-      <div className="shell landing-brand">
-        <Link to="/" className="logo">
-          NailCraft
-        </Link>
-      </div>
+      <BrandBar />
       <LandingNav />
 
       <main className="shell course-main">
@@ -74,11 +72,14 @@ export function CoursePage() {
           </div>
           <div className="course-aside-actions">
             <TelegramButton>Написать Анастасии</TelegramButton>
+            <Link to="/cabinet" className="cta-ghost">
+              В кабинет
+            </Link>
             <Link to="/" className="cta-ghost">
               На лендинг
             </Link>
-            <button type="button" className="text-reset" onClick={reset}>
-              Сбросить тест-доступ
+            <button type="button" className="text-reset" onClick={logout}>
+              Выйти
             </button>
           </div>
           <p className="muted">
@@ -89,35 +90,6 @@ export function CoursePage() {
           </p>
         </aside>
       </main>
-    </div>
-  )
-}
-
-export function TelegramLoginPage() {
-  return (
-    <div className="page">
-      <div className="atmosphere" aria-hidden>
-        <span className="orb orb-a" />
-      </div>
-      <div className="shell">
-        <div className="login-box glass-strong">
-          <Link to="/" className="logo">
-            NailCraft
-          </Link>
-          <h1>Вход</h1>
-          <p>
-            Пока без пароля и почты. Напишите Анастасии в Telegram — это и контакт,
-            и вход.
-          </p>
-          <TelegramButton>Открыть Telegram</TelegramButton>
-          <p className="muted login-note">
-            Тест курса — с лендинга, кнопка «открыть курс без оплаты». Эквайринга нет.
-          </p>
-          <Link to="/" className="back-home">
-            На главную
-          </Link>
-        </div>
-      </div>
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { useEffect, useState, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import handImg from '../assets/figma/hand.png'
 import masterImg from '../assets/figma/master.png'
+import { LeadForm } from '../components/LeadForm'
 import {
   LandingHeader,
   TelegramButton,
@@ -72,7 +73,7 @@ function CursorGlow() {
 
 export function LandingPage() {
   const navigate = useNavigate()
-  const { enroll, enrolled } = useStore()
+  const { user, enrolled, testPay } = useStore()
   const progress = useScrollProgress()
 
   useEffect(() => {
@@ -84,9 +85,13 @@ export function LandingPage() {
     return () => window.clearTimeout(t)
   }, [])
 
-  function openCourse() {
-    enroll()
-    navigate('/course')
+  async function openCourse() {
+    if (!user) {
+      navigate('/login?next=/cabinet/course&pay=1')
+      return
+    }
+    if (!enrolled) await testPay()
+    navigate('/cabinet/course')
   }
 
   return (
@@ -119,7 +124,7 @@ export function LandingPage() {
               </p>
               <div className="cta-wrap">
                 <TelegramButton>Написать в Telegram</TelegramButton>
-                <button type="button" className="cta-ghost" onClick={openCourse}>
+                <button type="button" className="cta-ghost" onClick={() => void openCourse()}>
                   {enrolled ? 'Открыть курс' : 'Тест · открыть курс без оплаты'}
                 </button>
                 <div className="hero-hand" aria-hidden>
@@ -205,10 +210,11 @@ export function LandingPage() {
             </ul>
             <div className="offer-actions">
               <TelegramButton>Забронировать место в Telegram</TelegramButton>
-              <button type="button" className="cta-ghost dark" onClick={openCourse}>
+              <button type="button" className="cta-ghost dark" onClick={() => void openCourse()}>
                 {enrolled ? 'Продолжить курс' : 'Тест · войти в курс без оплаты'}
               </button>
             </div>
+            <LeadForm dark title="Заявка в школу" submitLabel="Оставить заявку" />
           </Reveal>
         </section>
 
@@ -253,6 +259,11 @@ export function LandingPage() {
                 сложных ногтей пришлю в Telegram.
               </p>
               <TelegramButton>Забрать шпаргалку в Telegram</TelegramButton>
+              <LeadForm
+                source="magnet"
+                title="Или оставить Telegram здесь"
+                submitLabel="Забрать в CRM"
+              />
             </div>
             <div className="rpm-wrap" role="table" aria-label="Фрезы и обороты">
               <div className="rpm-head" role="row">
@@ -291,7 +302,7 @@ export function LandingPage() {
             </div>
             <aside className="about-aside glass-strong">
               <p>{MASTER.legal}</p>
-              <p>Контакт и вход — только Telegram.</p>
+              <p>Контакт — Telegram. Вход в кабинет и CRM — Login Widget, не ссылка.</p>
               <TelegramIconLink />
             </aside>
           </Reveal>

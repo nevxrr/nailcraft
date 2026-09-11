@@ -125,6 +125,110 @@ export const RPM_ROWS = [
   { bit: 'Кукуруза', zone: 'Длина, снятие', rpm: '8–12 тыс.', job: 'Материал, не живое' },
 ] as const
 
+export const SALES_SCRIPTS = [
+  {
+    id: 'sc-chips',
+    title: 'Сколы на третий день',
+    claim: 'Покрытие живёт три дня — виноват гель?',
+    benefit:
+      'Нет. Нет архитектуры. На курсе собираем форму, а не «подмазываем». Носка до коррекции, не до переделки.',
+  },
+  {
+    id: 'sc-base',
+    title: 'Гель как база',
+    claim: 'Я уже кладу гель — зачем ещё курс?',
+    benefit:
+      'Гель как база и гель как архитектура — разные жесты. Разберём, где пластина не держит и что менять руками.',
+  },
+  {
+    id: 'sc-fear',
+    title: 'Страх аппарата',
+    claim: 'Боюсь спилить живое.',
+    benefit:
+      'Аппарат безопасен, когда фреза и обороты в таблице. Не сила руки. Шпаргалку забираете с собой.',
+  },
+  {
+    id: 'sc-group',
+    title: 'Мини-группа из двух',
+    claim: 'В потоке меня не увидят.',
+    benefit:
+      'Два места. Теория, затем две модели. Вижу каждую руку. Не лекция на двадцать человек.',
+  },
+  {
+    id: 'sc-money',
+    title: 'Деньги и старт',
+    claim: 'С нуля далеко до клиентов.',
+    benefit:
+      'День собран так, чтобы выйти с двумя работами и таблицей. Стажировка 2 500 ₽ — когда будете готовы к живым клиентам.',
+  },
+] as const
+
+export const STARTER_LEADS = [
+  {
+    id: 'lead-alina',
+    name: 'Алина',
+    contact: '@alina_nails',
+    interest: COURSE.title,
+    experience: 'Делаю подругам, гель как база',
+    struggle: 'Сколы на третий день',
+    preferredDate: '2026-09-20',
+    status: 'new' as const,
+    source: 'landing' as const,
+    notes: '',
+    studentId: '',
+    createdAt: '2026-09-08T10:00:00.000Z',
+  },
+  {
+    id: 'lead-marina',
+    name: 'Марина',
+    contact: '+7 999 111-22-33',
+    interest: 'Шпаргалка «фрезы и обороты»',
+    experience: 'С нуля',
+    struggle: 'Страх аппарата',
+    preferredDate: '',
+    status: 'contacted' as const,
+    source: 'magnet' as const,
+    notes: 'Забрала каркас таблицы, ждёт PDF.',
+    studentId: '',
+    createdAt: '2026-09-09T14:20:00.000Z',
+  },
+]
+
+export const STARTER_GROUPS = [
+  {
+    id: 'g-sep-20',
+    date: '2026-09-20',
+    time: '11:00–17:00',
+    topic: 'Аппарат + гель · мини-группа',
+    seats: 2 as const,
+    studentIds: [] as string[],
+  },
+  {
+    id: 'g-sep-27',
+    date: '2026-09-27',
+    time: '11:00–17:00',
+    topic: 'Аппарат + гель · мини-группа',
+    seats: 2 as const,
+    studentIds: [] as string[],
+  },
+  {
+    id: 'g-oct-4',
+    date: '2026-10-04',
+    time: '12:00–18:00',
+    topic: '1:1 или пара',
+    seats: 2 as const,
+    studentIds: [] as string[],
+  },
+]
+
+export function formatDate(iso: string): string {
+  return new Date(`${iso}T12:00:00`).toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    weekday: 'short',
+  })
+}
+
 export const COURSE_SLOTS = [
   {
     id: 'theory',
